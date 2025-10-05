@@ -1,1 +1,1 @@
-README for Alpahbet
+README for Alphabet
