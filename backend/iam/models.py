@@ -1,3 +1,5 @@
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils import timezone
 from django.db import models
 
 class User(models.Model):
@@ -44,7 +46,7 @@ class User(models.Model):
     reg_type = models.CharField(max_length=191)
     block_user = models.CharField(max_length=1, choices=BLOCK_USER_CHOICES, default='0')
     otp = models.IntegerField(default=0)
-    otp_verify = models.IntegerField()
+    otp_verify = models.IntegerField(null=True, blank=True)
     password = models.CharField(max_length=191, null=True, blank=True)
     designation_id = models.CharField(max_length=10000, default='0')
     admin_id = models.CharField(max_length=11, null=True, blank=True)
@@ -73,3 +75,25 @@ class User(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ActiveToken(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='active_tokens')
+    jti = models.CharField(max_length=255, unique=True)        # JWT ID
+    token_type = models.CharField(max_length=10)               # access / refresh
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'active_tokens'
+
+
+class BlacklistedToken(models.Model):
+    user_id = models.BigIntegerField(null=True, blank=True)
+    jti = models.CharField(max_length=255, unique=True)
+    token_type = models.CharField(max_length=10)
+    revoked_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'blacklisted_tokens'
